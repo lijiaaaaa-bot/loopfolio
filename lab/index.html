@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>词力对比实验 · Loopfolio</title>
+  <style>
+    :root {
+      --ink: #f3f1fe;
+      --muted: #a7a3bd;
+      --accent: #6c4cf0;
+      --accent-soft: #a48bff;
+      --warm: #ffdcb8;
+      --night: #0c0b12;
+      --raised: #171425;
+      --paper-stroke: rgba(255,255,255,.08);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--night); color: var(--ink); font: 16px/1.45 ui-rounded, "SF Pro Text", system-ui, sans-serif; }
+    body { max-width: 430px; margin: 0 auto; padding: 20px 18px 48px; }
+    h1 { font: 600 1.25rem/1.3 ui-serif, "Times New Roman", serif; margin: 0 0 .35rem; }
+    .lede, .note, .muted { color: var(--muted); }
+    .lede { font-size: .9rem; margin: 0 0 1rem; }
+    .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--raised); padding: 5px; border-radius: 12px; margin: .8rem 0 1rem; }
+    .seg button { appearance: none; border: 0; background: transparent; color: var(--muted); padding: .65rem .4rem; border-radius: 9px; font-weight: 600; }
+    .seg button[aria-pressed="true"] { background: var(--accent); color: white; }
+    .card { background: rgba(23,20,37,.72); border: 1px solid var(--paper-stroke); border-radius: 22px; padding: 16px; }
+    label.k { font-size: .75rem; color: var(--muted); }
+    .def { font: 500 1.05rem/1.35 ui-serif, Georgia, serif; margin: .35rem 0 .8rem; }
+    .row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+    .target { font: 12px ui-monospace, monospace; color: color-mix(in srgb, var(--muted) 70%, transparent); }
+    input[type="text"] {
+      width: 100%; border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+      background: var(--raised); color: white; border-radius: 14px; padding: 12px 14px; font-size: 16px;
+      outline: none; transition: transform 55ms ease-out, box-shadow 55ms ease-out;
+    }
+    input.flash { transform: scale(1.035); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-soft) 55%, transparent); }
+    input.wrong { border-color: color-mix(in srgb, #ff6b6b 70%, transparent); }
+    .meter { margin-top: 12px; }
+    .meter .row { font-size: .72rem; margin-bottom: 6px; }
+    .bar { height: 6px; background: rgba(255,255,255,.08); border-radius: 99px; overflow: hidden; }
+    .bar > i { display: block; height: 100%; width: 34%; background: var(--accent); border-radius: inherit; transition: width 80ms ease-out; }
+    .actions { display: grid; gap: 10px; margin: 16px 0; }
+    .actions button {
+      appearance: none; border: 0; border-radius: 14px; padding: 13px; font-weight: 600; color: white; cursor: pointer;
+    }
+    .primary { background: var(--accent); }
+    .secondary { background: var(--raised); border: 1px solid var(--paper-stroke); }
+    .toast {
+      text-align: center; font-size: .9rem; font-weight: 500; padding: 8px 14px; border-radius: 14px;
+      background: rgba(255,255,255,.08); backdrop-filter: blur(16px); margin-bottom: 8px;
+    }
+    .note { font-size: .75rem; }
+    .note strong { color: var(--accent-soft); font-weight: 600; }
+    #cinema {
+      position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity 180ms ease-out;
+    }
+    #cinema.on { opacity: 1; }
+    canvas { width: 100%; height: 100%; display: block; }
+    .caption {
+      position: fixed; left: 50%; top: 42%; transform: translate(-50%,-50%); text-align: center; width: min(22rem, 88vw);
+      opacity: 0; transition: opacity 200ms ease-out;
+    }
+    #cinema.on .caption { opacity: 1; }
+    .caption h2 { font: 600 1.75rem/1.2 ui-serif, Georgia, serif; letter-spacing: .08em; margin: 0 0 .4rem; }
+    .caption p { margin: 0; color: rgba(255,255,255,.78); font-size: .9rem; }
+    a { color: var(--accent-soft); }
+  </style>
+</head>
+<body>
+  <p class="muted" style="font-size:.8rem;margin:0 0 .6rem">Loopfolio · Debug 预览（非 App Store 页）</p>
+  <h1 id="headline">键程手感（无全屏）</h1>
+  <p class="lede" id="blurb">每敲对一个字母：轻触感的闪/缩。掌握条微动。稀有事件只有弱提示。</p>
+  <div class="seg" role="tablist">
+    <button id="laneA" aria-pressed="true" type="button">A · 手感</button>
+    <button id="laneB" aria-pressed="false" type="button">B · 电影</button>
+  </div>
+  <div class="card">
+    <label class="k">看释义，敲英文</label>
+    <div class="row">
+      <div class="def">短暂的，转瞬即逝的</div>
+      <div class="target" id="hint">ephemeral</div>
+    </div>
+    <input id="typed" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="输入 ephemeral">
+    <div class="meter">
+      <div class="row"><span>掌握</span><span id="pct">34%</span></div>
+      <div class="bar"><i id="bar"></i></div>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="primary" id="leap" type="button">触发掌握跃迁</button>
+    <button class="secondary" id="clear" type="button">触发本局清完</button>
+  </div>
+  <div class="toast" id="toast" hidden></div>
+  <p class="note"><strong>结构隔离</strong>　输入只走键程。B 的光在独立层，0.8–1.8s 后拆除。这是网页对照，真实验在 <code>wordloop-ios</code>。</p>
+  <p class="note"><a href="../">返回 Loopfolio</a></p>
+
+  <div id="cinema" aria-hidden="true">
+    <canvas id="bloom"></canvas>
+    <div class="caption">
+      <h2 id="cineTitle">掌握跃迁</h2>
+      <p id="cineSub">词力抬了一档。没有对手，只有光线。</p>
+    </div>
+  </div>
+
+  <script>
+    const words = ["ephemeral", "lucid", "resonance", "threshold", "aether"];
+    const defs = {
+      ephemeral: "短暂的，转瞬即逝的",
+      lucid: "清醒的，明晰的",
+      resonance: "共振，余韵",
+      threshold: "门槛，临界",
+      aether: "以太，上层的气"
+    };
+    let lane = "A";
+    let target = "ephemeral";
+    let typed = "";
+    let mastery = 0.34;
+    let cinemaTimer = 0;
+
+    const $ = (id) => document.getElementById(id);
+    const input = $("typed");
+    const toast = $("toast");
+    const cinema = $("cinema");
+    const canvas = $("bloom");
+    const ctx = canvas.getContext("2d");
+
+    function setLane(next) {
+      lane = next;
+      $("laneA").setAttribute("aria-pressed", String(next === "A"));
+      $("laneB").setAttribute("aria-pressed", String(next === "B"));
+      $("headline").textContent = next === "A" ? "键程手感（无全屏）" : "电影式留存（独立层）";
+      $("blurb").textContent = next === "A"
+        ? "每敲对一个字母：轻触感的闪/缩。掌握条微动。稀有事件只有弱提示。"
+        : "字母手感与 A 相同。掌握跃迁 / 本局清完走独立层，0.8–1.8s 抽象光。";
+      hideToast();
+      stopCinema();
+    }
+
+    function renderMeter() {
+      $("pct").textContent = Math.round(mastery * 100) + "%";
+      $("bar").style.width = (mastery * 100) + "%";
+    }
+
+    function flash(ok) {
+      input.classList.toggle("flash", ok);
+      input.classList.toggle("wrong", !ok);
+      setTimeout(() => input.classList.remove("flash"), 55);
+    }
+
+    function nextWord() {
+      const i = words.indexOf(target);
+      target = words[(i + 1) % words.length];
+      typed = "";
+      input.value = "";
+      input.placeholder = "输入 " + target;
+      $("hint").textContent = target;
+      document.querySelector(".def").textContent = defs[target];
+    }
+
+    input.addEventListener("input", () => {
+      const raw = input.value.toLowerCase().replace(/[^a-z]/g, "");
+      if (target.startsWith(raw) && raw.length === typed.length + 1) {
+        typed = raw;
+        mastery = Math.min(1, mastery + 0.018);
+        flash(true);
+        renderMeter();
+        if (typed === target) nextWord();
+      } else if (target.startsWith(raw) && raw.length < typed.length) {
+        typed = raw;
+      } else {
+        input.value = typed;
+        flash(false);
+      }
+    });
+
+    function showToast(text) {
+      toast.hidden = false;
+      toast.textContent = text;
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(hideToast, 1400);
+    }
+    function hideToast() { toast.hidden = true; }
+
+    function trigger(kind) {
+      mastery = Math.min(1, mastery + 0.06);
+      renderMeter();
+      if (lane === "A") {
+        showToast(kind === "leap" ? "掌握 +6%（无全屏）" : "本局记了一笔（无全屏）");
+        return;
+      }
+      hideToast();
+      playCinema(kind);
+    }
+
+    function sizeCanvas() {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      canvas.width = innerWidth * dpr;
+      canvas.height = innerHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function envelope(p) {
+      if (p < 0.18) return p / 0.18;
+      if (p > 0.72) return Math.max(0, 1 - (p - 0.72) / 0.28);
+      return 1;
+    }
+
+    function playCinema(kind) {
+      const duration = kind === "leap" ? 1150 : 1650;
+      $("cineTitle").textContent = kind === "leap" ? "掌握跃迁" : "本局清完";
+      $("cineSub").textContent = kind === "leap"
+        ? "词力抬了一档。没有对手，只有光线。"
+        : "这一轮收束。留下来的是安静的亮。";
+      cinema.classList.add("on");
+      sizeCanvas();
+      const start = performance.now();
+      cancelAnimationFrame(cinemaTimer);
+      const tick = (now) => {
+        const p = Math.min(1, (now - start) / duration);
+        drawBloom(p, kind);
+        if (p < 1) cinemaTimer = requestAnimationFrame(tick);
+        else stopCinema();
+      };
+      cinemaTimer = requestAnimationFrame(tick);
+    }
+
+    function stopCinema() {
+      cinema.classList.remove("on");
+      cancelAnimationFrame(cinemaTimer);
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+    }
+
+    function drawBloom(progress, kind) {
+      const w = innerWidth, h = innerHeight;
+      const env = envelope(progress);
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = `rgba(12,11,18,${(kind === "clear" ? 0.42 : 0.28) * env})`;
+      ctx.fillRect(0, 0, w, h);
+      const cx = w * 0.5, cy = h * 0.46;
+      const radius = Math.min(w, h);
+      const layers = [
+        [0.92, "108,76,240", kind === "clear" ? 0.34 : 0.26],
+        [0.55, "164,139,255", 0.4],
+        [0.22, "255,220,184", 0.55],
+      ];
+      for (const [scale, rgb, op] of layers) {
+        const r = radius * scale * (0.55 + 0.45 * env);
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r / 2);
+        g.addColorStop(0, `rgba(${rgb},${op * env})`);
+        g.addColorStop(1, `rgba(${rgb},0)`);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      const filaments = kind === "clear" ? 7 : 5;
+      ctx.strokeStyle = `rgba(164,139,255,${0.45 * env})`;
+      ctx.lineWidth = 1.4;
+      ctx.lineCap = "round";
+      for (let i = 0; i < filaments; i++) {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        const phase = i * 0.73 + progress * 2.1;
+        for (let step = 1; step <= 18; step++) {
+          const t = step / 18;
+          const angle = phase + t * 1.25 + Math.sin(progress * 6 + i) * 0.35;
+          const dist = radius * 0.04 + t * radius * (0.18 + 0.22 * env);
+          ctx.lineTo(cx + Math.cos(angle) * dist, cy + Math.sin(angle) * dist * 0.86);
+        }
+        ctx.stroke();
+      }
+      const motes = kind === "clear" ? 28 : 18;
+      for (let i = 0; i < motes; i++) {
+        const seed = i * 1.618;
+        const angle = seed + progress * (1.2 + (i % 5) * 0.15);
+        const dist = radius * (0.08 + 0.38 * ((seed * 0.13) % 1));
+        const expand = dist * (0.65 + 0.55 * env);
+        const x = cx + Math.cos(angle) * expand;
+        const y = cy + Math.sin(angle) * expand;
+        ctx.fillStyle = `rgba(255,220,184,${0.55 * env})`;
+        ctx.beginPath();
+        ctx.arc(x, y, 1.2 + (i % 3) * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    $("laneA").onclick = () => setLane("A");
+    $("laneB").onclick = () => setLane("B");
+    $("leap").onclick = () => trigger("leap");
+    $("clear").onclick = () => trigger("clear");
+    renderMeter();
+  </script>
+</body>
+</html>
