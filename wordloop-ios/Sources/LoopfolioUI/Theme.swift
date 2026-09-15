@@ -13,9 +13,17 @@ enum LoopfolioTheme {
     static let warmLight = Color(red: 1.0, green: 0.86, blue: 0.72)
     static let muted = Color(red: 0.38, green: 0.365, blue: 0.467)
     static let success = Color(red: 0.31, green: 0.72, blue: 0.56)
+    static let powerFill = accent
+    static let powerTrack = Color.white.opacity(0.10)
+    static let hitFlash = accentSoft.opacity(0.28)
 
-    /// Keystroke path only: stay under 80ms so the finger still owns the loop.
+    static let screenTitle = Font.system(size: 34, weight: .semibold, design: .serif)
+    static let bigNumber = Font.system(size: 44, weight: .semibold, design: .rounded)
+
+    /// A: keystroke only, hard cap 300ms. Keep this short so C can own the room.
     static let keystrokeFlash: Animation = .easeOut(duration: 0.055)
+    static let motionHit: Animation = .easeOut(duration: 0.18)
+    static let motionMeter: Animation = .easeOut(duration: 0.28)
     static let toast: Animation = .easeOut(duration: 0.18)
 }
 

@@ -1,27 +1,34 @@
-// Why: sixty-second feel test. Lane A never touches CelebrationStore. Lane B never puts
-// TimelineView under the TextField. Same typing strip, two different rare-event paths.
+// Why: sixty-second feel test. A never owns an overlay. B is a short isolated bloom.
+// C is a different overlay (ClimaxOverlay) that can change the room's 气质.
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 public enum LabLane: String, CaseIterable, Identifiable {
     case keystroke = "A · 手感"
-    case cinema = "B · 电影"
+    case smallClimax = "B · 小高潮"
+    case cinema = "C · 电影"
 
     public var id: String { rawValue }
 
     public var headline: String {
         switch self {
         case .keystroke: return "键程手感（无全屏）"
-        case .cinema: return "电影式留存（独立层）"
+        case .smallClimax: return "小高潮（短 overlay）"
+        case .cinema: return "电影高潮（气质层）"
         }
     }
 
     public var blurb: String {
         switch self {
         case .keystroke:
-            return "每敲对一个字母：触觉 + 55ms 闪/缩。掌握条微动。稀有事件只有弱提示。"
+            return "每敲对一个字母 ≤300ms：触觉 + 闪/缩。稀有按钮只有弱 toast。"
+        case .smallClimax:
+            return "键程与 A 相同。掌握跃迁 / 连击走 CelebrationHost，0.6–1.2s，不改房间气质。"
         case .cinema:
-            return "字母手感与 A 相同。掌握跃迁 / 本局清完走 CelebrationHost，0.8–1.8s 抽象光。"
+            return "先收键盘再播 ClimaxOverlay：压暗 → 仪表放大冲格 → ≤24 色屑 →「今日清空」/「词力提升」。1.8–2.8s。"
         }
     }
 }
@@ -30,42 +37,53 @@ public struct CelebrationCompareLab: View {
     @State private var lane: LabLane = .keystroke
     @State private var session = FakeTypingSession()
     @State private var toast: String?
-    @State private var store = CelebrationStore()
+    @State private var celebration = CelebrationStore()
+    @State private var climax = ClimaxStore()
+    @FocusState private var fieldFocused: Bool
 
     public init() {}
 
     public var body: some View {
-        CelebrationHost(store: store) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    picker
-                    Text(lane.blurb)
-                        .font(.footnote)
-                        .foregroundStyle(LoopfolioTheme.muted)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    KeystrokeStrip(session: $session)
-
-                    rareEventButtons
-
-                    if let toast {
-                        WeakToast(text: toast)
-                            .frame(maxWidth: .infinity)
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
-                    }
-
-                    isolationNote
-                }
-                .padding(20)
+        ClimaxHost(store: climax) {
+            CelebrationHost(store: celebration) {
+                labContent
             }
-            .background(LoopfolioTheme.night.ignoresSafeArea())
-            .foregroundStyle(.white)
-            .navigationTitle("词力对比实验")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
         }
         .animation(LoopfolioTheme.toast, value: toast)
+    }
+
+    private var labContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                picker
+                Text(lane.blurb)
+                    .font(.footnote)
+                    .foregroundStyle(LoopfolioTheme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                KeystrokeStrip(session: $session, focus: $fieldFocused)
+
+                rareEventButtons
+
+                if let toast {
+                    WeakToast(text: toast)
+                        .frame(maxWidth: .infinity)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+
+                isolationNote
+            }
+            .padding(20)
+        }
+        .background(LoopfolioTheme.night.ignoresSafeArea())
+        .foregroundStyle(.white)
+        .navigationTitle("词力对比实验")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        #if os(iOS)
+        .scrollDismissesKeyboard(.interactively)
+        #endif
     }
 
     private var picker: some View {
@@ -80,28 +98,42 @@ public struct CelebrationCompareLab: View {
             .pickerStyle(.segmented)
             .onChange(of: lane) { _, _ in
                 toast = nil
-                store.cancelAll()
+                celebration.cancelAll()
+                climax.cancel()
             }
         }
     }
 
+    @ViewBuilder
     private var rareEventButtons: some View {
-        VStack(spacing: 10) {
-            Button {
-                trigger(.masteryLeap)
-            } label: {
-                Label("触发掌握跃迁", systemImage: "arrow.up.right.circle")
-                    .frame(maxWidth: .infinity)
+        switch lane {
+        case .keystroke:
+            VStack(spacing: 10) {
+                labButton("触发掌握跃迁", icon: "arrow.up.right.circle", emphasis: .primary) {
+                    triggerA(toast: "掌握 +6%（无全屏）")
+                }
+                labButton("触发本局清完", icon: "checkmark.circle", emphasis: .secondary) {
+                    triggerA(toast: "本局记了一笔（无全屏）")
+                }
             }
-            .buttonStyle(LabButtonStyle(emphasis: .primary))
-
-            Button {
-                trigger(.sessionClear)
-            } label: {
-                Label("触发本局清完", systemImage: "checkmark.circle")
-                    .frame(maxWidth: .infinity)
+        case .smallClimax:
+            VStack(spacing: 10) {
+                labButton("触发掌握跃迁", icon: "arrow.up.right.circle", emphasis: .primary) {
+                    triggerB(.masteryLeap)
+                }
+                labButton("触发连击里程碑", icon: "flame", emphasis: .secondary) {
+                    triggerB(.streak)
+                }
             }
-            .buttonStyle(LabButtonStyle(emphasis: .secondary))
+        case .cinema:
+            VStack(spacing: 10) {
+                labButton("触发本局清完", icon: "checkmark.circle", emphasis: .primary) {
+                    triggerC(.sessionClear, surge: 0.12)
+                }
+                labButton("触发词力大升级", icon: "sparkles", emphasis: .secondary) {
+                    triggerC(.powerUpgrade, surge: 0.22)
+                }
+            }
         }
     }
 
@@ -110,29 +142,57 @@ public struct CelebrationCompareLab: View {
             Text("结构隔离")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(LoopfolioTheme.accentSoft)
-            Text("输入框只走 KeystrokeFeel。B 的光在 CelebrationHost 里，播完即拆除 TimelineView。")
+            Text("A 只走 KeystrokeFeel。B 是 CelebrationHost。C 是 ClimaxOverlay：键盘未收不起片，同时只跑一段，播完拆除 TimelineView。")
                 .font(.caption)
                 .foregroundStyle(LoopfolioTheme.muted)
         }
         .padding(.top, 8)
     }
 
-    private func trigger(_ kind: CelebrationEvent.Kind) {
+    private func labButton(_ title: String, icon: String, emphasis: LabButtonStyle.Emphasis, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: icon)
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(LabButtonStyle(emphasis: emphasis))
+    }
+
+    private func triggerA(toast text: String) {
         session.bumpMasteryForWeakToast()
-        switch lane {
-        case .keystroke:
-            toast = kind == .masteryLeap ? "掌握 +6%（无全屏）" : "本局记了一笔（无全屏）"
-            Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(1400))
-                if toast?.contains("无全屏") == true {
-                    toast = nil
-                }
-            }
-        case .cinema:
-            toast = nil
-            store.enqueue(kind)
+        toast = text
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(1400))
+            if toast == text { toast = nil }
         }
     }
+
+    private func triggerB(_ kind: CelebrationEvent.Kind) {
+        toast = nil
+        session.bumpMasteryForWeakToast()
+        celebration.enqueue(kind)
+    }
+
+    private func triggerC(_ kind: ClimaxEvent.Kind, surge: Double) {
+        toast = nil
+        fieldFocused = false
+        #if os(iOS)
+        resignKeyboard()
+        #endif
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(120))
+            let range = session.surgeMastery(by: surge)
+            let event = ClimaxEvent(kind: kind, fromMastery: range.from, toMastery: range.to)
+            climax.play(event, keyboardFocused: fieldFocused)
+        }
+    }
+
+    #if os(iOS)
+    private func resignKeyboard() {
+        #if canImport(UIKit)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        #endif
+    }
+    #endif
 }
 
 struct LabButtonStyle: ButtonStyle {

@@ -86,6 +86,12 @@ public struct FakeTypingSession: Equatable, Sendable {
     public mutating func bumpMasteryForWeakToast() {
         mastery = min(1, mastery + 0.06)
     }
+
+    public mutating func surgeMastery(by delta: Double) -> (from: Double, to: Double) {
+        let from = mastery
+        mastery = min(1, mastery + delta)
+        return (from, mastery)
+    }
 }
 
 public enum LabWordBank {

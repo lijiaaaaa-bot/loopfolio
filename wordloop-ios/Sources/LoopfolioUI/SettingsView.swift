@@ -38,7 +38,7 @@ public struct SettingsView: View {
                     } label: {
                         Label("词力对比实验", systemImage: "film.stack")
                     }
-                    Text("A 手感 vs B 电影层。Debug 构建可见，Release 编译剔除。")
+                    Text("A 手感 / B 小高潮 / C 电影。Debug 构建可见，Release 编译剔除。")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 } header: {

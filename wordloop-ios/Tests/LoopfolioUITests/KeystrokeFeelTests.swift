@@ -37,6 +37,14 @@ struct KeystrokeFeelTests {
         #expect(session.wordsCleared == 1)
     }
 
+    @Test func surgeReportsTheFillWindow() {
+        var session = FakeTypingSession(mastery: 0.40)
+        let range = session.surgeMastery(by: 0.22)
+        #expect(range.from == 0.40)
+        #expect(abs(range.to - 0.62) < 0.0001)
+        #expect(session.mastery == range.to)
+    }
+
     @Test func wordBankCycles() {
         #expect(LabWordBank.next(after: "aether") == "ephemeral")
         #expect(LabWordBank.next(after: "unknown") == "ephemeral")

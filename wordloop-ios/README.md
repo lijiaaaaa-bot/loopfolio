@@ -1,6 +1,6 @@
 # Loopfolio / WordLoop — 词力对比实验
 
-这个 GitHub 仓库原先只有 App Store 隐私与支持页（`gh-pages`）。本目录是一份**可单独编译的 SwiftUI 切片**：用来回答「电影式庆祝值不值得、会不会伤打字手感」，而不是重做整款产品。
+这个 GitHub 仓库原先只有 App Store 隐私与支持页（`gh-pages`）。本目录是一份**可单独编译的 SwiftUI 切片**：对照 A 手感、B 小高潮、C 电影高潮，而不是重做整款产品。
 
 真机工程若在 `~/Projects/wordloop-ios`，把 `Sources/LoopfolioUI/Celebration/` 整夹拷进去，并在设置里挂上 `CelebrationCompareLab` 即可。
 
@@ -21,22 +21,23 @@ xed Loopfolio.xcodeproj
 3. 路径任选其一：
    - 首页 → **打开词力对比实验**
    - 右上角齿轮 → 设置 → **调试 → 词力对比实验**
-4. 先切 **A · 手感**：敲 `ephemeral`（卡片上有目标词）。每对一个字母只有轻触 + 55ms 闪缩，掌握条微动。再点「触发掌握跃迁」「触发本局清完」——只有弱提示，没有全屏。
-5. 再切 **B · 电影**：继续打字（手感应与 A 相同），然后点那两个按钮。全屏是独立的 `CelebrationHost` 抽象光（0.8–1.8s），播完拆除 `TimelineView`。
+4. **A · 手感**：敲 `ephemeral`。每对一字母 ≤300ms 闪缩。稀有按钮只有弱 toast。
+5. **B · 小高潮**：继续打字，点「触发掌握跃迁」「触发连击里程碑」。短 overlay 0.6–1.2s，不改房间。
+6. **C · 电影**：点「触发本局清完」或「触发词力大升级」。先收键盘，再播 `ClimaxOverlay`（压暗 → 仪表放大冲格 → ≤24 色屑 → 标题，1.8–2.8s）。
 
-浏览器里也有一份手感对照（不是产品代码）：仓库根目录 `lab/index.html`，或 GitHub Pages `/lab/`。
+浏览器对照：仓库根目录 `lab/index.html`，或 GitHub Pages `/lab/`。
 
 ## 结构
 
 | 路径 | 职责 |
 | --- | --- |
 | `KeystrokeFeel` + `KeystrokeStrip` | A：局部反馈，不拥有全屏 |
-| `CelebrationStore` + `CelebrationHost` | B：独立队列与 overlay |
-| `EnergyBloomCanvas` + `EnergyBloom.metal` | 程序化光；shader 可选 |
-| `CelebrationCompareLab` | 分段对照 |
+| `CelebrationStore` + `CelebrationHost` | B：短 bloom / 连击确认 |
+| `ClimaxStore` + `ClimaxOverlay` | C：气质层；聚焦时不起片；同时一段 |
+| `CelebrationCompareLab` | 三段对照 |
 
-打字视图树里没有 `TimelineView` / shader。
+打字视图树里没有 `TimelineView` / shader。C 播完拆除。
 
-## 判断（工程侧）
+## 判断
 
-B **值得做成稀有层**，不值得跟在每个键后面。A 已经能保住「敲对立刻下一题」的手感；B 只要严格隔离、短于 1.8s、抽象而不是卡通战斗，就可以当留存时刻。把 B 做进键程会立刻伤手感。
+用户要求 **A+B 都留**。B 不够改气质；**C 才是愿意打开 App 的理由**。C 必须隔离、先收键盘、短于 2.8s、抽象光而不是卡通战斗。

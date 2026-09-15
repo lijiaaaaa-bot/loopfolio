@@ -4,7 +4,7 @@ import SwiftUI
 
 struct KeystrokeStrip: View {
     @Binding var session: FakeTypingSession
-    @FocusState private var focused: Bool
+    var focus: FocusState<Bool>.Binding
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -28,7 +28,7 @@ struct KeystrokeStrip: View {
                 .textInputAutocapitalization(.never)
                 .keyboardType(.asciiCapable)
                 #endif
-                .focused($focused)
+                .focused(focus)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
                 .background(LoopfolioTheme.nightRaised, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -51,7 +51,7 @@ struct KeystrokeStrip: View {
         }
         .padding(16)
         .background(LoopfolioTheme.nightRaised.opacity(0.7), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .onAppear { focused = true }
+        .onAppear { focus.wrappedValue = true }
         .onChange(of: session.lastOutcome) { _, outcome in
             if outcome == .wordComplete {
                 session.loadNextWord(LabWordBank.next(after: session.target))

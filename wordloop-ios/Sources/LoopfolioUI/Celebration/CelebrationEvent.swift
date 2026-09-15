@@ -6,7 +6,7 @@ import Foundation
 public struct CelebrationEvent: Identifiable, Equatable, Sendable {
     public enum Kind: String, Sendable, Equatable {
         case masteryLeap
-        case sessionClear
+        case streak
     }
 
     public let id: UUID
@@ -22,25 +22,25 @@ public struct CelebrationEvent: Identifiable, Equatable, Sendable {
     public var title: String {
         switch kind {
         case .masteryLeap: return "掌握跃迁"
-        case .sessionClear: return "本局清完"
+        case .streak: return "连击"
         }
     }
 
     public var subtitle: String {
         switch kind {
-        case .masteryLeap: return "词力抬了一档。没有对手，只有光线。"
-        case .sessionClear: return "这一轮收束。留下来的是安静的亮。"
+        case .masteryLeap: return "这一词站住了。短光，不占场。"
+        case .streak: return "节奏还在。小高潮，不是电影。"
         }
     }
 
     public static func defaultDuration(for kind: Kind) -> TimeInterval {
         switch kind {
-        case .masteryLeap: return 1.15
-        case .sessionClear: return 1.65
+        case .masteryLeap: return 0.95
+        case .streak: return 1.0
         }
     }
 
     public static func clamp(_ raw: TimeInterval) -> TimeInterval {
-        min(1.8, max(0.8, raw))
+        min(1.2, max(0.6, raw))
     }
 }
