@@ -11,6 +11,7 @@ struct KeystrokeFeelTests {
         #expect(session.ingest("luci") == .correctChar)
         #expect(session.ingest("lucid") == .wordComplete)
         #expect(session.wordsCleared == 1)
+        #expect(session.streak == 1)
         #expect(session.mastery > 0.30)
     }
 
@@ -35,6 +36,17 @@ struct KeystrokeFeelTests {
         #expect(session.typed.isEmpty)
         #expect(session.mastery >= 0.50)
         #expect(session.wordsCleared == 1)
+        #expect(session.streak == 1)
+    }
+
+    @Test func submitSessionMarksTheLabEndState() {
+        var session = FakeTypingSession(target: "lucid")
+        session.submitSession()
+        #expect(session.sessionSubmitted)
+    }
+
+    @Test func smallClimaxRayCapMatchesSpec() {
+        #expect(EnergyBloomCanvas.maxRays == 16)
     }
 
     @Test func surgeReportsTheFillWindow() {

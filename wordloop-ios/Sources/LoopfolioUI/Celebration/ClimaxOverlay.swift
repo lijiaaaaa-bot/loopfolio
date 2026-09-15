@@ -64,9 +64,9 @@ struct ClimaxOverlay: View {
                 HeroMasteryRing(value: event.toMastery)
                     .frame(width: 196, height: 196)
                 Text(event.title)
-                    .font(LoopfolioTheme.screenTitle)
+                    .font(Typo.screenTitle)
                 Text(event.subtitle)
-                    .font(.footnote)
+                    .font(Typo.footnote)
                     .foregroundStyle(.white.opacity(0.78))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 28)
@@ -112,7 +112,7 @@ struct ClimaxOverlay: View {
                     .scaleEffect(scale)
                 VStack(spacing: 8) {
                     Text(event.title)
-                        .font(LoopfolioTheme.screenTitle)
+                        .font(Typo.screenTitle)
                         .tracking(1.4)
                     Text(event.subtitle)
                         .font(.footnote)
@@ -192,7 +192,7 @@ struct HeroMasteryRing: View {
             }
             VStack(spacing: 4) {
                 Text("\(Int((value * 100).rounded()))%")
-                    .font(LoopfolioTheme.bigNumber)
+                    .font(Typo.bigNumber)
                     .monospacedDigit()
                 Text("已掌握")
                     .font(.footnote)

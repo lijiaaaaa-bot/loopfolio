@@ -16,24 +16,30 @@ public struct FakeTypingSession: Equatable, Sendable {
     public var typed: String
     public var correctCount: Int
     public var wordsCleared: Int
+    public var streak: Int
     public var mastery: Double
     public var flashToken: Int
     public var lastOutcome: KeystrokeOutcome
+    public var sessionSubmitted: Bool
 
     public init(
         target: String = "ephemeral",
         typed: String = "",
         correctCount: Int = 0,
         wordsCleared: Int = 0,
-        mastery: Double = 0.34
+        streak: Int = 0,
+        mastery: Double = 0.34,
+        sessionSubmitted: Bool = false
     ) {
         self.target = target
         self.typed = typed
         self.correctCount = correctCount
         self.wordsCleared = wordsCleared
+        self.streak = max(0, streak)
         self.mastery = min(1, max(0, mastery))
         self.flashToken = 0
         self.lastOutcome = .ignored
+        self.sessionSubmitted = sessionSubmitted
     }
 
     /// Apply the field's new string. Only a one-character correct prefix extension flashes.
@@ -52,6 +58,7 @@ public struct FakeTypingSession: Equatable, Sendable {
             if typed == target {
                 lastOutcome = .wordComplete
                 wordsCleared += 1
+                streak += 1
                 return .wordComplete
             }
             lastOutcome = .correctChar
@@ -73,11 +80,13 @@ public struct FakeTypingSession: Equatable, Sendable {
         let keepMastery = mastery
         let keepCorrect = correctCount
         let keepCleared = wordsCleared
+        let keepStreak = streak
         self = FakeTypingSession(
             target: word,
             typed: "",
             correctCount: keepCorrect,
             wordsCleared: keepCleared,
+            streak: keepStreak,
             mastery: keepMastery
         )
         flashToken = keepFlash
@@ -91,6 +100,15 @@ public struct FakeTypingSession: Equatable, Sendable {
         let from = mastery
         mastery = min(1, mastery + delta)
         return (from, mastery)
+    }
+
+    /// Lab stand-in for 词提交 / 局结束. C may play only after this.
+    public mutating func submitSession() {
+        sessionSubmitted = true
+        if typed == target, !typed.isEmpty {
+            wordsCleared += 1
+            streak += 1
+        }
     }
 }
 

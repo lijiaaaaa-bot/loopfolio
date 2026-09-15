@@ -21,7 +21,7 @@
     h1 { font: 600 1.25rem/1.3 "Songti SC", "Source Han Serif SC", "Noto Sans CJK SC", "WenQuanYi Micro Hei", ui-serif, serif; margin: 0 0 .35rem; }
     .lede, .note, .muted { color: var(--muted); }
     .lede { font-size: .9rem; margin: 0 0 1rem; }
-    .seg { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; background: var(--raised); padding: 5px; border-radius: 12px; margin: .8rem 0 1rem; }
+    .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--raised); padding: 5px; border-radius: 12px; margin: .8rem 0 1rem; }
     .seg button { appearance: none; border: 0; background: transparent; color: var(--muted); padding: .6rem .2rem; border-radius: 9px; font-weight: 600; font-size: .82rem; }
     .seg button[aria-pressed="true"] { background: var(--accent); color: white; }
     .card { background: rgba(23,20,37,.72); border: 1px solid var(--paper-stroke); border-radius: 22px; padding: 16px; }
@@ -78,12 +78,11 @@
 </head>
 <body>
   <p class="muted" style="font-size:.8rem;margin:0 0 .6rem">Loopfolio · Debug 预览（非 App Store 页）</p>
-  <h1 id="headline">键程手感（无全屏）</h1>
-  <p class="lede" id="blurb">每敲对一个字母 ≤300ms：轻触感的闪/缩。稀有按钮只有弱 toast。</p>
+  <h1 id="headline">A 击键层</h1>
+  <p class="lede" id="blurb">打对：HitFlash + 迷你掌握条 + StreakBadge，≤300ms。从不是全屏电影。</p>
   <div class="seg" role="tablist">
-    <button id="laneA" aria-pressed="true" type="button">A · 手感</button>
-    <button id="laneB" aria-pressed="false" type="button">B · 小高潮</button>
-    <button id="laneC" aria-pressed="false" type="button">C · 电影</button>
+    <button id="laneA" aria-pressed="true" type="button">A 击键层</button>
+    <button id="laneC" aria-pressed="false" type="button">C 电影高潮</button>
   </div>
   <div class="card">
     <label class="k">看释义，敲英文</label>
@@ -99,7 +98,7 @@
   </div>
   <div class="actions" id="actions"></div>
   <div class="toast" id="toast" hidden></div>
-  <p class="note"><strong>结构隔离</strong>　A 只走键程。B 是短 overlay。C 是 ClimaxOverlay：先收键盘，压暗 → 仪表放大 → ≤24 色屑 → 标题，播完拆除。</p>
+  <p class="note"><strong>规格</strong>　D-POWER-METER-SPEC.md / D-CINEMATIC-CLIMAX-SPEC.md。主对照 A vs C。B 是可选中间层（≤16 径向线）。C 先提交本局再播。</p>
   <p class="note"><a href="../">返回 Loopfolio</a></p>
 
   <div id="layer" aria-hidden="true">
@@ -127,9 +126,8 @@
       aether: "以太，上层的气"
     };
     const copy = {
-      A: ["键程手感（无全屏）", "每敲对一个字母 ≤300ms：轻触感的闪/缩。稀有按钮只有弱 toast。"],
-      B: ["小高潮（短 overlay）", "键程与 A 相同。掌握跃迁 / 连击 0.6–1.2s，不改房间气质。"],
-      C: ["电影高潮（气质层）", "先收键盘。压暗 60% → 仪表放大冲格 → ≤24 色屑 →「今日清空」/「词力提升」。"],
+      A: ["A 击键层", "打对：HitFlash + 迷你掌握条 + StreakBadge，≤300ms。从不是全屏电影。"],
+      C: ["C 电影高潮", "仅今日清完 / 词力大升级。先提交本局、收键盘，再播 ClimaxOverlay 1.8–2.8s。"],
     };
     let lane = "A";
     let target = "ephemeral";
@@ -145,10 +143,11 @@
     const ctx = canvas.getContext("2d");
 
     function setLane(next) {
-      lane = next;
-      ["A","B","C"].forEach((id) => $(`lane${id}`).setAttribute("aria-pressed", String(next === id)));
-      $("headline").textContent = copy[next][0];
-      $("blurb").textContent = copy[next][1];
+      lane = next === "B" ? "A" : next;
+      $("laneA").setAttribute("aria-pressed", String(lane === "A"));
+      $("laneC").setAttribute("aria-pressed", String(lane === "C"));
+      $("headline").textContent = copy[lane][0];
+      $("blurb").textContent = copy[lane][1];
       hideToast();
       stopLayer();
       renderActions();
@@ -158,11 +157,22 @@
       const host = $("actions");
       const buttons = {
         A: [["primary","触发掌握跃迁",() => triggerA("掌握 +6%（无全屏）")],["secondary","触发本局清完",() => triggerA("本局记了一笔（无全屏）")]],
-        B: [["primary","触发掌握跃迁",() => triggerB("leap")],["secondary","触发连击里程碑",() => triggerB("streak")]],
-        C: [["primary","触发本局清完",() => triggerC("clear")],["secondary","触发词力大升级",() => triggerC("upgrade")]],
+        C: [["primary","触发今日清完",() => triggerC("clear")],["secondary","触发词力大升级",() => triggerC("upgrade")]],
       };
       host.innerHTML = "";
       for (const [cls, label, fn] of buttons[lane]) {
+        const b = document.createElement("button");
+        b.className = cls;
+        b.type = "button";
+        b.textContent = label;
+        b.onclick = fn;
+        host.appendChild(b);
+      }
+      const optional = [
+        ["secondary", "B 小高潮 · 掌握跃迁", () => triggerB("leap")],
+        ["secondary", "B 小高潮 · 连击里程碑", () => triggerB("streak")],
+      ];
+      for (const [cls, label, fn] of optional) {
         const b = document.createElement("button");
         b.className = cls;
         b.type = "button";
@@ -333,7 +343,6 @@
     }
 
     $("laneA").onclick = () => setLane("A");
-    $("laneB").onclick = () => setLane("B");
     $("laneC").onclick = () => setLane("C");
     renderMeter();
     renderActions();

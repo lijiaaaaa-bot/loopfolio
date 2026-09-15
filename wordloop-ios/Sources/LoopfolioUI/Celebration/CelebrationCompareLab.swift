@@ -1,5 +1,5 @@
-// Why: sixty-second feel test. A never owns an overlay. B is a short isolated bloom.
-// C is a different overlay (ClimaxOverlay) that can change the room's 气质.
+// Why: A vs C is the experiment. B is an optional middle control per
+// D-CINEMATIC-CLIMAX-SPEC.md. Typing never owns ClimaxOverlay.
 
 import SwiftUI
 #if canImport(UIKit)
@@ -7,28 +7,24 @@ import UIKit
 #endif
 
 public enum LabLane: String, CaseIterable, Identifiable {
-    case keystroke = "A · 手感"
-    case smallClimax = "B · 小高潮"
-    case cinema = "C · 电影"
+    case keystroke = "A 击键层"
+    case cinema = "C 电影高潮"
 
     public var id: String { rawValue }
 
     public var headline: String {
         switch self {
-        case .keystroke: return "键程手感（无全屏）"
-        case .smallClimax: return "小高潮（短 overlay）"
-        case .cinema: return "电影高潮（气质层）"
+        case .keystroke: return "A 击键层"
+        case .cinema: return "C 电影高潮"
         }
     }
 
     public var blurb: String {
         switch self {
         case .keystroke:
-            return "每敲对一个字母 ≤300ms：触觉 + 闪/缩。稀有按钮只有弱 toast。"
-        case .smallClimax:
-            return "键程与 A 相同。掌握跃迁 / 连击走 CelebrationHost，0.6–1.2s，不改房间气质。"
+            return "打对：HitFlash + 迷你掌握条 + StreakBadge，≤300ms。从不是全屏电影。"
         case .cinema:
-            return "先收键盘再播 ClimaxOverlay：压暗 → 仪表放大冲格 → ≤24 色屑 →「今日清空」/「词力提升」。1.8–2.8s。"
+            return "仅「今日清完 / 词力大升级」。先提交本局、收键盘，再播 ClimaxOverlay 1.8–2.8s。"
         }
     }
 }
@@ -49,7 +45,7 @@ public struct CelebrationCompareLab: View {
                 labContent
             }
         }
-        .animation(LoopfolioTheme.toast, value: toast)
+        .animation(Motion.toast, value: toast)
     }
 
     private var labContent: some View {
@@ -57,13 +53,18 @@ public struct CelebrationCompareLab: View {
             VStack(alignment: .leading, spacing: 18) {
                 picker
                 Text(lane.blurb)
-                    .font(.footnote)
-                    .foregroundStyle(LoopfolioTheme.muted)
+                    .font(Typo.footnote)
+                    .foregroundStyle(Theme.inkSoft)
                     .fixedSize(horizontal: false, vertical: true)
 
-                KeystrokeStrip(session: $session, focus: $fieldFocused)
+                KeystrokeStrip(
+                    session: $session,
+                    focus: $fieldFocused,
+                    autoFocus: lane == .keystroke
+                )
 
                 rareEventButtons
+                optionalBControl
 
                 if let toast {
                     WeakToast(text: toast)
@@ -75,15 +76,19 @@ public struct CelebrationCompareLab: View {
             }
             .padding(20)
         }
-        .background(LoopfolioTheme.night.ignoresSafeArea())
-        .foregroundStyle(.white)
+        .background(Theme.canvas.ignoresSafeArea())
+        .foregroundStyle(Theme.ink)
         .navigationTitle("词力对比实验")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
-        #endif
-        #if os(iOS)
         .scrollDismissesKeyboard(.interactively)
         #endif
+        .onChange(of: lane) { _, newLane in
+            toast = nil
+            celebration.cancelAll()
+            climax.cancel()
+            fieldFocused = (newLane == .keystroke)
+        }
     }
 
     private var picker: some View {
@@ -96,11 +101,6 @@ public struct CelebrationCompareLab: View {
                 }
             }
             .pickerStyle(.segmented)
-            .onChange(of: lane) { _, _ in
-                toast = nil
-                celebration.cancelAll()
-                climax.cancel()
-            }
         }
     }
 
@@ -116,18 +116,9 @@ public struct CelebrationCompareLab: View {
                     triggerA(toast: "本局记了一笔（无全屏）")
                 }
             }
-        case .smallClimax:
-            VStack(spacing: 10) {
-                labButton("触发掌握跃迁", icon: "arrow.up.right.circle", emphasis: .primary) {
-                    triggerB(.masteryLeap)
-                }
-                labButton("触发连击里程碑", icon: "flame", emphasis: .secondary) {
-                    triggerB(.streak)
-                }
-            }
         case .cinema:
             VStack(spacing: 10) {
-                labButton("触发本局清完", icon: "checkmark.circle", emphasis: .primary) {
+                labButton("触发今日清完", icon: "checkmark.circle", emphasis: .primary) {
                     triggerC(.sessionClear, surge: 0.12)
                 }
                 labButton("触发词力大升级", icon: "sparkles", emphasis: .secondary) {
@@ -137,14 +128,39 @@ public struct CelebrationCompareLab: View {
         }
     }
 
+    private var optionalBControl: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("可选中间层")
+                .font(Typo.footnote.weight(.semibold))
+                .foregroundStyle(Theme.inkSoft)
+            Button {
+                triggerB(.masteryLeap)
+            } label: {
+                Label("B 小高潮 · 掌握跃迁", systemImage: "circle.hexagonpath")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(LabButtonStyle(emphasis: .secondary))
+            Button {
+                triggerB(.streak)
+            } label: {
+                Label("B 小高潮 · 连击里程碑", systemImage: "flame")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(LabButtonStyle(emphasis: .secondary))
+            Text("0.6–1.2s，Canvas ≤16 条径向线。不是电影。")
+                .font(Typo.footnote)
+                .foregroundStyle(Theme.inkSoft)
+        }
+    }
+
     private var isolationNote: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("结构隔离")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(LoopfolioTheme.accentSoft)
-            Text("A 只走 KeystrokeFeel。B 是 CelebrationHost。C 是 ClimaxOverlay：键盘未收不起片，同时只跑一段，播完拆除 TimelineView。")
-                .font(.caption)
-                .foregroundStyle(LoopfolioTheme.muted)
+            Text("规格")
+                .font(Typo.footnote.weight(.semibold))
+                .foregroundStyle(Theme.accentSoft)
+            Text("对照 D-POWER-METER-SPEC.md 与 D-CINEMATIC-CLIMAX-SPEC.md。A 用 HitFlash / StreakBadge / 迷你条。C 用隔离 ClimaxOverlay（TimelineView + Canvas，无 SpriteKit / 主路径 Metal）。键盘未收、词未提交则不起 C。")
+                .font(Typo.footnote)
+                .foregroundStyle(Theme.inkSoft)
         }
         .padding(.top, 8)
     }
@@ -174,15 +190,19 @@ public struct CelebrationCompareLab: View {
 
     private func triggerC(_ kind: ClimaxEvent.Kind, surge: Double) {
         toast = nil
+        session.submitSession()
         fieldFocused = false
         #if os(iOS)
         resignKeyboard()
         #endif
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(120))
+            try? await Task.sleep(for: .milliseconds(140))
+            guard session.sessionSubmitted, !fieldFocused else { return }
             let range = session.surgeMastery(by: surge)
-            let event = ClimaxEvent(kind: kind, fromMastery: range.from, toMastery: range.to)
-            climax.play(event, keyboardFocused: fieldFocused)
+            climax.play(
+                ClimaxEvent(kind: kind, fromMastery: range.from, toMastery: range.to),
+                keyboardFocused: fieldFocused
+            )
         }
     }
 
@@ -201,17 +221,17 @@ struct LabButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.body.weight(.medium))
-            .padding(.vertical, 13)
-            .foregroundStyle(.white)
-            .background(background, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .font(Typo.button)
+            .padding(.vertical, 14)
+            .foregroundStyle(Theme.onAccent)
+            .background(background, in: Capsule())
             .opacity(configuration.isPressed ? 0.82 : 1)
     }
 
     private var background: Color {
         switch emphasis {
-        case .primary: return LoopfolioTheme.accent
-        case .secondary: return LoopfolioTheme.nightRaised
+        case .primary: return Theme.accent
+        case .secondary: return Theme.surface
         }
     }
 }
