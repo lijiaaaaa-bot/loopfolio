@@ -1,31 +1,69 @@
-// Why: a one-screen host so Settings (and the lab) are reachable. Not a product rebuild.
+// Why: production home — mastery, start the real typing round, C lives on RootView.
+// The compare lab stays a Debug door, not the settlement path.
 
 import SwiftUI
 
 public struct HomeView: View {
-    public init() {}
+    @Bindable var progress: DailyProgress
+    var climax: ClimaxStore
+    var celebration: CelebrationStore
+
+    public init(progress: DailyProgress, climax: ClimaxStore, celebration: CelebrationStore) {
+        self.progress = progress
+        self.climax = climax
+        self.celebration = celebration
+    }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Text("看释义，敲英文")
-                .font(.system(size: 32, weight: .semibold, design: .serif))
-            Text("一局几十秒。对了立刻下一题。这个仓库里的可运行切片只带 A / B / C 词力对比实验。")
-                .foregroundStyle(LoopfolioTheme.muted)
-            Spacer()
-            if LabAccess.isEnabled {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                Text("词力 / 今日")
+                    .font(Typo.screenTitle)
+
+                MasteryMeter(value: progress.mastery, size: .hero)
+                    .frame(maxWidth: 280)
+                    .frame(maxWidth: .infinity)
+
+                HStack(spacing: 10) {
+                    StreakBadge(count: progress.bestStreak)
+                    Text(progress.clearedToday ? "今日队列已清空" : "下一可亮词 · \(LabWordBank.gloss(for: progress.nextPrompt))")
+                        .font(Typo.footnote)
+                        .foregroundStyle(Theme.inkSoft)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                if !progress.clearedToday {
+                    Text("还剩 \(progress.remaining) 词")
+                        .font(Typo.footnote)
+                        .foregroundStyle(Theme.inkSoft)
+                }
+
                 NavigationLink {
-                    CelebrationCompareLab()
+                    TypingSessionView(
+                        progress: progress,
+                        climax: climax,
+                        celebration: celebration
+                    )
                 } label: {
-                    Label("打开词力对比实验", systemImage: "sparkles")
+                    Text(progress.clearedToday ? "再来一局" : "开始打字")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(LabButtonStyle(emphasis: .primary))
+
+                if LabAccess.isEnabled {
+                    NavigationLink {
+                        CelebrationCompareLab()
+                    } label: {
+                        Label("打开词力对比实验", systemImage: "sparkles")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(LabButtonStyle(emphasis: .secondary))
+                }
             }
+            .padding(24)
         }
-        .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(LoopfolioTheme.night.ignoresSafeArea())
-        .foregroundStyle(.white)
+        .background(Theme.canvas.ignoresSafeArea())
+        .foregroundStyle(Theme.ink)
         .navigationTitle("Loopfolio")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)

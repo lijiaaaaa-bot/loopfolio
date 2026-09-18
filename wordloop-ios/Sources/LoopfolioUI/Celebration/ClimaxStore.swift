@@ -29,6 +29,26 @@ public final class ClimaxStore {
         return true
     }
 
+    /// Production settlement entry. One C at a time; a second kind merges copy.
+    @discardableResult
+    public func playSettlement(
+        kinds: [ClimaxEvent.Kind],
+        fromMastery: Double,
+        toMastery: Double,
+        keyboardFocused: Bool
+    ) -> Int {
+        var accepted = 0
+        for kind in kinds {
+            if play(
+                ClimaxEvent(kind: kind, fromMastery: fromMastery, toMastery: toMastery),
+                keyboardFocused: keyboardFocused
+            ) {
+                accepted += 1
+            }
+        }
+        return accepted
+    }
+
     public func finishCurrent(id: UUID) {
         guard current?.id == id else { return }
         current = nil

@@ -63,6 +63,8 @@ ClimaxOverlay(event:)
   · 播放中暂停底层无关键动画即可，勿卡手势返回
 ```
 
+生产接线（本仓库切片）：`RootView` 用 `ClimaxHost` 包 `NavigationStack`。真局 `TypingSessionView` 在最后一词 `SessionDirector.ingest` 结算后收键盘，再 `ClimaxStore.playSettlement`。「今日清空」= 当日首次队列清空；「词力提升」= 本局掌握涨幅 ≥ 0.22。实验室 `CelebrationCompareLab.triggerC` 只做对照，不是生产路径。
+
 ---
 
 ## 4. 与三屏关系

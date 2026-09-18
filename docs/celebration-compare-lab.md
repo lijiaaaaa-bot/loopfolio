@@ -24,7 +24,7 @@ Xcode 里：
 1. Scheme **Loopfolio**，任意 iPhone 模拟器。
 2. 必须 **Debug**（Release 会 `#if DEBUG` 摘掉入口）。
 3. Run（⌘R）。
-4. 首页 → **打开词力对比实验**，或齿轮 → 设置 → **调试 → 词力对比实验**。
+4. 首页 **开始打字** 是生产路径；**打开词力对比实验**（或齿轮 → 设置 → **调试**）仍是 A/B/C QA。
 
 打开实验室默认落在 **C · 电影**，并先播一段「今日清空」。
 
@@ -50,6 +50,21 @@ Reduce Motion：B/C 都降为静态卡 ≤400ms。
 - `?cinema=clear&progress=0.55` 冻结 C 中段
 - `?cinema=leap` 冻结 B
 
+真局结算对照：`lab/session.html`（Pages `/lab/session.html`）。首页「开始打字」，打完今日队列后收键盘再播 C。默认还剩 1 词（`ephemeral`）便于看「今日清空」；`?remaining=5` 走满队列，掌握涨幅会合并「词力提升」。
+
+## 生产路径何时播 C
+
+真局不在实验室按钮里。`RootView` 用 `ClimaxHost` 包住整个 `NavigationStack`，结算过渡时 C 盖在首页 / 打字局上面。
+
+| 事件 | 调用点 | 文案 |
+| --- | --- | --- |
+| 今日/本局队列打完 | `TypingSessionView.applyInput` → `SessionDirector.ingest` → 最后一词 `advanceAfterWord() == .settlement` → 收键盘 140ms → `ClimaxStore.playSettlement` | 「今日清空」 |
+| 本局掌握涨幅 ≥ 0.22 | 同上（可与清空合并文案）；或中途返回时 `SessionDirector.abandonCinema` | 「词力提升」 |
+| 掌握跃迁 / 连击 5/10/20（局中） | `SessionDirector.ingest` 下一词未结算 → `CelebrationStore.enqueue`（B，0.6–1.2s） | 掌握跃迁 / 连击 |
+| 打对一字 | `FakeTypingSession.ingest`（A，≤300ms） | HitFlash |
+
+规则：`SessionFeel.cinema` 只返回上述两种 C；键盘仍聚焦则 `play` 拒绝。同一天已播过「今日清空」后，再来一局不再重复清空片，仍可播大升级。实验室 `CelebrationCompareLab.triggerC` 仍可单独 QA A/B/C。
+
 ## 接到 `~/Projects/wordloop-ios`
 
-拷贝 `wordloop-ios/Sources/LoopfolioUI/Celebration/` 与 `Theme.swift`。根视图：`ClimaxHost { CelebrationHost { 打字页 } }`。C 只在词提交 / 局结束后 `play(..., keyboardFocused: false)`。
+拷贝 `wordloop-ios/Sources/LoopfolioUI/Celebration/`、`TypingSessionView.swift`、`DailyProgress.swift` 与 `Theme.swift`。根视图必须是 `ClimaxHost { CelebrationHost { 打字页 } }`。C 只在词提交 / 局结束后 `playSettlement(..., keyboardFocused: false)`。

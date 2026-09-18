@@ -45,6 +45,24 @@ struct KeystrokeFeelTests {
         #expect(session.sessionSubmitted)
     }
 
+    @Test func submitAfterWordCompleteDoesNotDoubleCount() {
+        var session = FakeTypingSession(target: "lucid", upcoming: [])
+        for end in 1...5 {
+            _ = session.ingest(String("lucid".prefix(end)))
+        }
+        #expect(session.wordsCleared == 1)
+        #expect(session.advanceAfterWord() == .settlement)
+        #expect(session.sessionSubmitted)
+        #expect(session.wordsCleared == 1)
+        #expect(session.streak == 1)
+    }
+
+    @Test func glossBankCoversTheDailyQueue() {
+        for word in LabWordBank.words {
+            #expect(LabWordBank.gloss(for: word) != word)
+        }
+    }
+
     @Test func smallClimaxRayCapMatchesSpec() {
         #expect(EnergyBloomCanvas.maxRays == 16)
     }

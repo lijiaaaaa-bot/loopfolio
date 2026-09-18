@@ -1,10 +1,7 @@
-// Why: A / B / C are three different product rooms. A never owns a TimelineView.
-// B is a short bloom. C is the isolated ClimaxOverlay that actually changes 气质.
+// Why: A / B / C QA rooms. Production settlement is TypingSessionView + SessionDirector,
+// not these buttons. A never owns a TimelineView. B is a short bloom. C is ClimaxOverlay.
 
 import SwiftUI
-#if canImport(UIKit)
-import UIKit
-#endif
 
 public enum LabLane: String, CaseIterable, Identifiable {
     case keystroke = "A · 手感"
@@ -167,7 +164,7 @@ public struct CelebrationCompareLab: View {
             fieldFocused = true
         case .smallClimax:
             fieldFocused = false
-            resignKeyboardIfNeeded()
+            KeyboardResign.resign()
             if playDemo {
                 Task { @MainActor in
                     try? await Task.sleep(for: .milliseconds(80))
@@ -177,7 +174,7 @@ public struct CelebrationCompareLab: View {
             }
         case .cinema:
             fieldFocused = false
-            resignKeyboardIfNeeded()
+            KeyboardResign.resign()
             if playDemo {
                 Task { @MainActor in
                     try? await Task.sleep(for: .milliseconds(160))
@@ -207,7 +204,7 @@ public struct CelebrationCompareLab: View {
         toast = nil
         session.submitSession()
         fieldFocused = false
-        resignKeyboardIfNeeded()
+        KeyboardResign.resign()
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(140))
             guard session.sessionSubmitted, !fieldFocused else { return }
@@ -217,14 +214,6 @@ public struct CelebrationCompareLab: View {
                 keyboardFocused: fieldFocused
             )
         }
-    }
-
-    private func resignKeyboardIfNeeded() {
-        #if os(iOS)
-        #if canImport(UIKit)
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-        #endif
-        #endif
     }
 }
 

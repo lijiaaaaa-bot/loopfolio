@@ -19,7 +19,7 @@ struct KeystrokeStrip: View {
 
             HitFlash(token: session.flashToken, armed: session.lastOutcome == .wordComplete) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("短暂的，转瞬即逝的")
+                    Text(LabWordBank.gloss(for: session.target))
                         .font(.system(size: 17, weight: .medium, design: .serif))
                         .foregroundStyle(session.lastOutcome == .wrong ? Theme.inkSoft : Theme.ink)
                     Spacer()
