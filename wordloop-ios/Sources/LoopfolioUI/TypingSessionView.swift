@@ -52,7 +52,7 @@ public struct TypingSessionView: View {
 
     private var header: some View {
         HStack(alignment: .center, spacing: 12) {
-            Text(settled ? "本局收束" : "还剩 \(max(session.remainingCount, settled ? 0 : 1)) 词")
+            Text(settled ? "本局收束" : "还剩 \(max(1, session.remainingCount)) 词")
                 .font(Typo.footnote)
                 .foregroundStyle(Theme.inkSoft)
             Spacer()
