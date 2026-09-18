@@ -49,6 +49,10 @@ struct KeystrokeFeelTests {
         #expect(EnergyBloomCanvas.maxRays == 16)
     }
 
+    @Test func labHasThreeLanes() {
+        #expect(LabLane.allCases.map(\.rawValue) == ["A · 手感", "B · 小高潮", "C · 电影"])
+    }
+
     @Test func surgeReportsTheFillWindow() {
         var session = FakeTypingSession(mastery: 0.40)
         let range = session.surgeMastery(by: 0.22)

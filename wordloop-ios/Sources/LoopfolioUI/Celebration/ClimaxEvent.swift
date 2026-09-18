@@ -58,7 +58,7 @@ public struct ClimaxEvent: Identifiable, Equatable, Sendable {
 /// Beat sheet in seconds. Overlay reads this; it does not invent a second timeline.
 public enum ClimaxBeat {
     public static func dimOpacity(elapsed: TimeInterval, duration: TimeInterval) -> Double {
-        let peak = 0.60
+        let peak = 0.62
         if elapsed < 0.20 { return peak * (elapsed / 0.20) }
         let fadeStart = max(1.80, duration - 0.40)
         if elapsed >= fadeStart {
@@ -71,9 +71,9 @@ public enum ClimaxBeat {
         if elapsed < 0.15 { return 1 }
         if elapsed < 0.50 {
             let t = (elapsed - 0.15) / 0.35
-            return 1 + 0.20 * easeOut(t)
+            return 1 + 0.22 * easeOut(t)
         }
-        if elapsed < 0.90 { return 1.20 }
+        if elapsed < 0.90 { return 1.22 }
         if elapsed < 1.80 { return 1.18 }
         return 1.12
     }

@@ -29,6 +29,7 @@ struct ClimaxBeatTests {
         #expect(ClimaxBeat.scrapsActive(elapsed: 0.2) == false)
         #expect(ClimaxBeat.scrapsActive(elapsed: 0.9) == true)
         #expect(ClimaxBeat.scrapsActive(elapsed: 1.8) == false)
+        #expect(ClimaxScrapCanvas.maxScraps == 24)
     }
 
     @Test func flashIsASingleSoftFrame() {

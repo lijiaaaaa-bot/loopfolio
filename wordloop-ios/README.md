@@ -2,7 +2,7 @@
 
 规格：`../wordloop-design/D-POWER-METER-SPEC.md`、`../wordloop-design/D-CINEMATIC-CLIMAX-SPEC.md`。
 
-本目录是可单独编译的 SwiftUI 切片。主对照 **A 击键层 vs C 电影高潮**；B 小高潮是可选中间按钮。
+本目录是可单独编译的 SwiftUI 切片。实验室三段：**A · 手感 / B · 小高潮 / C · 电影**。打开默认落在 C，并先播一段电影高潮。
 
 ## 本地 Mac 模拟器
 
@@ -20,8 +20,8 @@ xed Loopfolio.xcodeproj
 
 ## 点什么
 
-1. **A 击键层** — 敲 `ephemeral`。HitFlash + 迷你条 + StreakBadge，≤300ms。稀有按钮只有 toast。
-2. **C 电影高潮** — 「触发今日清完」「触发词力大升级」。先提交本局、收键盘，再 `ClimaxOverlay` 1.8–2.8s。
-3. 可选 **B 小高潮** — 0.6–1.2s，≤16 条径向线。
+1. **A · 手感** — 敲 `ephemeral`。HitFlash + 迷你条 + StreakBadge，≤300ms。稀有按钮只有 toast。
+2. **B · 小高潮** — 掌握跃迁 / 连击里程碑。0.6–1.2s，Canvas ≤16 条径向线。
+3. **C · 电影** — 「触发今日清完」「触发词力大升级」。先提交本局、收键盘，再 `ClimaxOverlay` 1.8–2.8s。
 
 主路径打字不上 SpriteKit / Metal。C 用隔离 TimelineView + Canvas，播完拆除。

@@ -1,5 +1,5 @@
-// Why: A vs C is the experiment. B is an optional middle control per
-// D-CINEMATIC-CLIMAX-SPEC.md. Typing never owns ClimaxOverlay.
+// Why: A / B / C are three different product rooms. A never owns a TimelineView.
+// B is a short bloom. C is the isolated ClimaxOverlay that actually changes 气质.
 
 import SwiftUI
 #if canImport(UIKit)
@@ -7,15 +7,17 @@ import UIKit
 #endif
 
 public enum LabLane: String, CaseIterable, Identifiable {
-    case keystroke = "A 击键层"
-    case cinema = "C 电影高潮"
+    case keystroke = "A · 手感"
+    case smallClimax = "B · 小高潮"
+    case cinema = "C · 电影"
 
     public var id: String { rawValue }
 
     public var headline: String {
         switch self {
-        case .keystroke: return "A 击键层"
-        case .cinema: return "C 电影高潮"
+        case .keystroke: return "A · 手感"
+        case .smallClimax: return "B · 小高潮"
+        case .cinema: return "C · 电影高潮"
         }
     }
 
@@ -23,14 +25,16 @@ public enum LabLane: String, CaseIterable, Identifiable {
         switch self {
         case .keystroke:
             return "打对：HitFlash + 迷你掌握条 + StreakBadge，≤300ms。从不是全屏电影。"
+        case .smallClimax:
+            return "掌握跃迁 / 连击里程碑。0.6–1.2s，Canvas ≤16 条径向线。改不了 App 气质。"
         case .cinema:
-            return "仅「今日清完 / 词力大升级」。先提交本局、收键盘，再播 ClimaxOverlay 1.8–2.8s。"
+            return "今日清完 / 词力大升级。先交局、收键盘，再播 ClimaxOverlay：压暗 55–65%、仪表 1.15–1.25、≤24 色屑、Typo.screenTitle「今日清空」/「词力提升」，1.8–2.8s。"
         }
     }
 }
 
 public struct CelebrationCompareLab: View {
-    @State private var lane: LabLane = .keystroke
+    @State private var lane: LabLane = .cinema
     @State private var session = FakeTypingSession()
     @State private var toast: String?
     @State private var celebration = CelebrationStore()
@@ -46,6 +50,7 @@ public struct CelebrationCompareLab: View {
             }
         }
         .animation(Motion.toast, value: toast)
+        .onAppear { enterLane(lane, playDemo: true) }
     }
 
     private var labContent: some View {
@@ -64,7 +69,6 @@ public struct CelebrationCompareLab: View {
                 )
 
                 rareEventButtons
-                optionalBControl
 
                 if let toast {
                     WeakToast(text: toast)
@@ -84,10 +88,7 @@ public struct CelebrationCompareLab: View {
         .scrollDismissesKeyboard(.interactively)
         #endif
         .onChange(of: lane) { _, newLane in
-            toast = nil
-            celebration.cancelAll()
-            climax.cancel()
-            fieldFocused = (newLane == .keystroke)
+            enterLane(newLane, playDemo: true)
         }
     }
 
@@ -116,6 +117,15 @@ public struct CelebrationCompareLab: View {
                     triggerA(toast: "本局记了一笔（无全屏）")
                 }
             }
+        case .smallClimax:
+            VStack(spacing: 10) {
+                labButton("触发掌握跃迁", icon: "circle.hexagonpath", emphasis: .primary) {
+                    triggerB(.masteryLeap)
+                }
+                labButton("触发连击里程碑", icon: "flame", emphasis: .secondary) {
+                    triggerB(.streak)
+                }
+            }
         case .cinema:
             VStack(spacing: 10) {
                 labButton("触发今日清完", icon: "checkmark.circle", emphasis: .primary) {
@@ -128,37 +138,12 @@ public struct CelebrationCompareLab: View {
         }
     }
 
-    private var optionalBControl: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("可选中间层")
-                .font(Typo.footnote.weight(.semibold))
-                .foregroundStyle(Theme.inkSoft)
-            Button {
-                triggerB(.masteryLeap)
-            } label: {
-                Label("B 小高潮 · 掌握跃迁", systemImage: "circle.hexagonpath")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(LabButtonStyle(emphasis: .secondary))
-            Button {
-                triggerB(.streak)
-            } label: {
-                Label("B 小高潮 · 连击里程碑", systemImage: "flame")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(LabButtonStyle(emphasis: .secondary))
-            Text("0.6–1.2s，Canvas ≤16 条径向线。不是电影。")
-                .font(Typo.footnote)
-                .foregroundStyle(Theme.inkSoft)
-        }
-    }
-
     private var isolationNote: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("规格")
                 .font(Typo.footnote.weight(.semibold))
                 .foregroundStyle(Theme.accentSoft)
-            Text("对照 D-POWER-METER-SPEC.md 与 D-CINEMATIC-CLIMAX-SPEC.md。A 用 HitFlash / StreakBadge / 迷你条。C 用隔离 ClimaxOverlay（TimelineView + Canvas，无 SpriteKit / 主路径 Metal）。键盘未收、词未提交则不起 C。")
+            Text("三段对照：A 手感 / B 小高潮 / C 电影。A 用 HitFlash / StreakBadge / 迷你条。B 用 CelebrationHost + ≤16 径向线。C 用隔离 ClimaxOverlay（TimelineView + Canvas，无 SpriteKit / 主路径 Metal）。键盘未收、词未提交则不起 C。")
                 .font(Typo.footnote)
                 .foregroundStyle(Theme.inkSoft)
         }
@@ -171,6 +156,36 @@ public struct CelebrationCompareLab: View {
                 .frame(maxWidth: .infinity)
         }
         .buttonStyle(LabButtonStyle(emphasis: emphasis))
+    }
+
+    private func enterLane(_ next: LabLane, playDemo: Bool) {
+        toast = nil
+        celebration.cancelAll()
+        climax.cancel()
+        switch next {
+        case .keystroke:
+            fieldFocused = true
+        case .smallClimax:
+            fieldFocused = false
+            resignKeyboardIfNeeded()
+            if playDemo {
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(80))
+                    guard lane == .smallClimax else { return }
+                    triggerB(.masteryLeap)
+                }
+            }
+        case .cinema:
+            fieldFocused = false
+            resignKeyboardIfNeeded()
+            if playDemo {
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(160))
+                    guard lane == .cinema, !fieldFocused else { return }
+                    triggerC(.sessionClear, surge: 0.12)
+                }
+            }
+        }
     }
 
     private func triggerA(toast text: String) {
@@ -192,9 +207,7 @@ public struct CelebrationCompareLab: View {
         toast = nil
         session.submitSession()
         fieldFocused = false
-        #if os(iOS)
-        resignKeyboard()
-        #endif
+        resignKeyboardIfNeeded()
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(140))
             guard session.sessionSubmitted, !fieldFocused else { return }
@@ -206,13 +219,13 @@ public struct CelebrationCompareLab: View {
         }
     }
 
-    #if os(iOS)
-    private func resignKeyboard() {
+    private func resignKeyboardIfNeeded() {
+        #if os(iOS)
         #if canImport(UIKit)
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         #endif
+        #endif
     }
-    #endif
 }
 
 struct LabButtonStyle: ButtonStyle {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>词力对比实验 · Loopfolio</title>
+  <title>词力对比实验 · A / B / C · Loopfolio</title>
   <style>
     :root {
       --ink: #f3f1fe;
@@ -16,17 +16,45 @@
       --paper-stroke: rgba(255,255,255,.08);
     }
     * { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100%; background: var(--night); color: var(--ink); font: 16px/1.45 "SF Pro Text", "PingFang SC", "Noto Sans CJK SC", "Noto Sans CJK", "WenQuanYi Micro Hei", "Droid Sans Fallback", sans-serif; }
-    body { max-width: 430px; margin: 0 auto; padding: 20px 18px 48px; }
-    h1 { font: 600 1.25rem/1.3 "Songti SC", "Source Han Serif SC", "Noto Sans CJK SC", "WenQuanYi Micro Hei", ui-serif, serif; margin: 0 0 .35rem; }
+    html, body { margin: 0; min-height: 100%; color: var(--ink); font: 16px/1.45 "SF Pro Text", "PingFang SC", "Noto Sans CJK SC", "Noto Sans CJK", sans-serif; }
+    body {
+      max-width: 430px;
+      margin: 0 auto;
+      padding: 20px 18px 48px;
+      background: var(--night);
+      transition: background 280ms ease-out;
+    }
+    body[data-lane="C"] {
+      background:
+        radial-gradient(ellipse at 50% -10%, rgba(108,76,240,.28), transparent 46%),
+        radial-gradient(ellipse at 80% 110%, rgba(164,139,255,.10), transparent 42%),
+        #07060d;
+    }
+    body[data-lane="B"] {
+      background:
+        radial-gradient(ellipse at 50% 8%, rgba(164,139,255,.10), transparent 40%),
+        #0c0b12;
+    }
+    h1 { font: 600 1.25rem/1.3 "Songti SC", "Source Han Serif SC", "Noto Serif CJK SC", "Noto Sans CJK SC", ui-serif, serif; margin: 0 0 .35rem; }
     .lede, .note, .muted { color: var(--muted); }
     .lede { font-size: .9rem; margin: 0 0 1rem; }
-    .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--raised); padding: 5px; border-radius: 12px; margin: .8rem 0 1rem; }
-    .seg button { appearance: none; border: 0; background: transparent; color: var(--muted); padding: .6rem .2rem; border-radius: 9px; font-weight: 600; font-size: .82rem; }
+    .seg {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4px;
+      background: var(--raised);
+      padding: 5px;
+      border-radius: 12px;
+      margin: .8rem 0 1rem;
+    }
+    .seg button {
+      appearance: none; border: 0; background: transparent; color: var(--muted);
+      padding: .62rem .15rem; border-radius: 9px; font-weight: 600; font-size: .78rem;
+    }
     .seg button[aria-pressed="true"] { background: var(--accent); color: white; }
     .card { background: rgba(23,20,37,.72); border: 1px solid var(--paper-stroke); border-radius: 22px; padding: 16px; }
     label.k { font-size: .75rem; color: var(--muted); }
-    .def { font: 500 1.05rem/1.35 "Songti SC", "Noto Sans CJK SC", "WenQuanYi Micro Hei", Georgia, serif; margin: .35rem 0 .8rem; }
+    .def { font: 500 1.05rem/1.35 "Songti SC", "Noto Serif CJK SC", "Noto Sans CJK SC", Georgia, serif; margin: .35rem 0 .8rem; }
     .row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
     .target { font: 12px ui-monospace, monospace; color: color-mix(in srgb, var(--muted) 70%, transparent); }
     input[type="text"] {
@@ -53,36 +81,68 @@
     .note { font-size: .75rem; }
     .note strong { color: var(--accent-soft); font-weight: 600; }
     #layer {
-      position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity 180ms ease-out;
+      position: fixed; inset: 0; pointer-events: none; opacity: 0;
+      transition: opacity 160ms ease-out;
     }
     #layer.on { opacity: 1; }
-    canvas { width: 100%; height: 100%; display: block; }
-    .hero {
-      position: fixed; left: 50%; top: 38%; transform: translate(-50%,-50%) scale(.96);
-      text-align: center; width: min(22rem, 88vw); opacity: 0; transition: opacity 200ms ease-out, transform 280ms ease-out;
+    #layer.on.c { pointer-events: auto; }
+    .veil { position: absolute; inset: 0; }
+    #layer.b .veil {
+      background: radial-gradient(circle at 50% 42%, rgba(164,139,255,.30), rgba(12,11,18,.26) 42%, rgba(12,11,18,.10) 70%);
     }
-    #layer.on.c .hero { opacity: 1; transform: translate(-50%,-50%) scale(1.18); }
+    #layer.c .veil {
+      background:
+        radial-gradient(ellipse at 50% 38%, rgba(164,139,255,.28) 0%, rgba(108,76,240,.10) 28%, rgba(4,3,12,0) 52%),
+        radial-gradient(ellipse at 50% 40%, rgba(4,3,12,.20), rgba(2,1,8,.62) 58%, rgba(0,0,0,.72) 100%);
+    }
+    canvas { width: 100%; height: 100%; display: block; position: absolute; inset: 0; }
+    .hero {
+      position: fixed; left: 50%; top: 38%; transform: translate(-50%,-50%) scale(.92);
+      text-align: center; width: min(22rem, 88vw); opacity: 0;
+      transition: opacity 220ms ease-out, transform 320ms cubic-bezier(.16,1,.3,1), filter 320ms ease-out;
+    }
     #layer.on.b .hero { opacity: 1; transform: translate(-50%,-50%) scale(1); }
-    .ring { width: 196px; height: 196px; margin: 0 auto 14px; position: relative; }
+    #layer.on.c .hero {
+      opacity: 1;
+      transform: translate(-50%,-50%) scale(1.22);
+      filter: drop-shadow(0 0 42px rgba(164,139,255,.55)) drop-shadow(0 18px 40px rgba(0,0,0,.45));
+    }
+    .ring { width: 208px; height: 208px; margin: 0 auto 16px; position: relative; }
     .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
     .ring .pct {
       position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      font: 600 2rem/1 "Noto Sans CJK SC", sans-serif;
+      font: 600 2.15rem/1 "Noto Sans CJK SC", sans-serif;
     }
     .ring .pct small { font-size: .75rem; font-weight: 500; color: var(--muted); margin-top: 4px; }
-    .hero h2 { font: 600 2rem/1.2 "Songti SC", "Noto Sans CJK SC", Georgia, serif; letter-spacing: .08em; margin: 0 0 .4rem; }
+    .hero h2 {
+      font: 600 2.35rem/1.15 "Songti SC", "Source Han Serif SC", "Noto Serif CJK SC", "Noto Sans CJK SC", Georgia, serif;
+      letter-spacing: .14em; margin: 0 0 .45rem;
+    }
     .hero p { margin: 0; color: rgba(255,255,255,.78); font-size: .9rem; }
+    #cineCopy { transition: opacity 180ms ease-out; }
     #layer.b .ring { display: none; }
+    #layer.b .hero h2 { font-size: 1.35rem; letter-spacing: .06em; }
+    #layer.reduced .veil { background: rgba(0,0,0,.58); }
+    #layer.reduced .hero { opacity: 1; transform: translate(-50%,-50%) scale(1); filter: none; }
+    #continue {
+      display: none; margin: 18px auto 0; appearance: none; border: 0; border-radius: 999px;
+      padding: 10px 28px; background: var(--accent); color: white; font-weight: 600; pointer-events: auto;
+    }
+    #layer.on.c #continue { display: inline-block; }
     a { color: var(--accent-soft); }
+    @media (prefers-reduced-motion: reduce) {
+      .hero, input, body { transition: none !important; }
+    }
   </style>
 </head>
-<body>
+<body data-lane="C">
   <p class="muted" style="font-size:.8rem;margin:0 0 .6rem">Loopfolio · Debug 预览（非 App Store 页）</p>
-  <h1 id="headline">A 击键层</h1>
-  <p class="lede" id="blurb">打对：HitFlash + 迷你掌握条 + StreakBadge，≤300ms。从不是全屏电影。</p>
+  <h1 id="headline">C · 电影高潮</h1>
+  <p class="lede" id="blurb">今日清完 / 词力大升级。压暗房间、放大仪表、色屑、大字。打开本页就会先播一段 C。</p>
   <div class="seg" role="tablist">
-    <button id="laneA" aria-pressed="true" type="button">A 击键层</button>
-    <button id="laneC" aria-pressed="false" type="button">C 电影高潮</button>
+    <button id="laneA" aria-pressed="false" type="button">A · 手感</button>
+    <button id="laneB" aria-pressed="false" type="button">B · 小高潮</button>
+    <button id="laneC" aria-pressed="true" type="button">C · 电影</button>
   </div>
   <div class="card">
     <label class="k">看释义，敲英文</label>
@@ -98,21 +158,25 @@
   </div>
   <div class="actions" id="actions"></div>
   <div class="toast" id="toast" hidden></div>
-  <p class="note"><strong>规格</strong>　D-POWER-METER-SPEC.md / D-CINEMATIC-CLIMAX-SPEC.md。主对照 A vs C。B 是可选中间层（≤16 径向线）。C 先提交本局再播。</p>
+  <p class="note"><strong>规格</strong>　三段：A 手感 ≤300ms · B 小高潮 0.6–1.2s · C 电影 1.8–2.8s。C 先交局、收键盘再播。无卡通 / 金币 / Metal。</p>
   <p class="note"><a href="../">返回 Loopfolio</a></p>
 
   <div id="layer" aria-hidden="true">
+    <div class="veil"></div>
     <canvas id="bloom"></canvas>
     <div class="hero">
       <div class="ring">
         <svg viewBox="0 0 120 120" aria-hidden="true">
           <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="10"/>
-          <circle id="ringFill" cx="60" cy="60" r="48" fill="none" stroke="#6c4cf0" stroke-width="10" stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="180"/>
+          <circle id="ringFill" cx="60" cy="60" r="48" fill="none" stroke="#a48bff" stroke-width="10" stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="180"/>
         </svg>
-        <div class="pct"><span id="heroPct">56%</span><small>已掌握</small></div>
+        <div class="pct"><span id="heroPct">46%</span><small>已掌握</small></div>
       </div>
-      <h2 id="cineTitle">今日清空</h2>
-      <p id="cineSub">这一轮收束。可以停，也可以再来一局。</p>
+      <div id="cineCopy">
+        <h2 id="cineTitle">今日清空</h2>
+        <p id="cineSub">这一轮收束。可以停，也可以再来一局。</p>
+      </div>
+      <button id="continue" type="button">继续</button>
     </div>
   </div>
 
@@ -126,14 +190,16 @@
       aether: "以太，上层的气"
     };
     const copy = {
-      A: ["A 击键层", "打对：HitFlash + 迷你掌握条 + StreakBadge，≤300ms。从不是全屏电影。"],
-      C: ["C 电影高潮", "仅今日清完 / 词力大升级。先提交本局、收键盘，再播 ClimaxOverlay 1.8–2.8s。"],
+      A: ["A · 手感", "打对：HitFlash + 迷你掌握条 + StreakBadge，≤300ms。从不是全屏电影。"],
+      B: ["B · 小高潮", "掌握跃迁 / 连击里程碑。0.6–1.2s，≤16 条径向线。改不了 App 气质。"],
+      C: ["C · 电影高潮", "今日清完 / 词力大升级。压暗房间、放大仪表、色屑、大字。打开本页就会先播一段 C。"],
     };
-    let lane = "A";
+    let lane = "C";
     let target = "ephemeral";
     let typed = "";
     let mastery = 0.34;
     let cinemaTimer = 0;
+    let fromMastery = 0.34;
 
     const $ = (id) => document.getElementById(id);
     const input = $("typed");
@@ -141,38 +207,48 @@
     const layer = $("layer");
     const canvas = $("bloom");
     const ctx = canvas.getContext("2d");
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    function setLane(next) {
-      lane = next === "B" ? "A" : next;
+    function setLane(next, { demo = true } = {}) {
+      lane = next === "A" || next === "B" || next === "C" ? next : "C";
+      document.body.dataset.lane = lane;
       $("laneA").setAttribute("aria-pressed", String(lane === "A"));
+      $("laneB").setAttribute("aria-pressed", String(lane === "B"));
       $("laneC").setAttribute("aria-pressed", String(lane === "C"));
       $("headline").textContent = copy[lane][0];
       $("blurb").textContent = copy[lane][1];
       hideToast();
       stopLayer();
       renderActions();
+      if (lane === "A") {
+        input.focus();
+      } else {
+        input.blur();
+        if (demo) {
+          if (lane === "B") triggerB("leap");
+          if (lane === "C") triggerC("clear");
+        }
+      }
     }
 
     function renderActions() {
       const host = $("actions");
       const buttons = {
-        A: [["primary","触发掌握跃迁",() => triggerA("掌握 +6%（无全屏）")],["secondary","触发本局清完",() => triggerA("本局记了一笔（无全屏）")]],
-        C: [["primary","触发今日清完",() => triggerC("clear")],["secondary","触发词力大升级",() => triggerC("upgrade")]],
+        A: [
+          ["primary", "触发掌握跃迁", () => triggerA("掌握 +6%（无全屏）")],
+          ["secondary", "触发本局清完", () => triggerA("本局记了一笔（无全屏）")],
+        ],
+        B: [
+          ["primary", "触发掌握跃迁", () => triggerB("leap")],
+          ["secondary", "触发连击里程碑", () => triggerB("streak")],
+        ],
+        C: [
+          ["primary", "触发今日清完", () => triggerC("clear")],
+          ["secondary", "触发词力大升级", () => triggerC("upgrade")],
+        ],
       };
       host.innerHTML = "";
       for (const [cls, label, fn] of buttons[lane]) {
-        const b = document.createElement("button");
-        b.className = cls;
-        b.type = "button";
-        b.textContent = label;
-        b.onclick = fn;
-        host.appendChild(b);
-      }
-      const optional = [
-        ["secondary", "B 小高潮 · 掌握跃迁", () => triggerB("leap")],
-        ["secondary", "B 小高潮 · 连击里程碑", () => triggerB("streak")],
-      ];
-      for (const [cls, label, fn] of optional) {
         const b = document.createElement("button");
         b.className = cls;
         b.type = "button";
@@ -234,16 +310,26 @@
     }
 
     function triggerB(kind) {
+      if (document.activeElement === input) input.blur();
       mastery = Math.min(1, mastery + 0.06);
       renderMeter();
       hideToast();
-      input.blur();
       playLayer("b", kind, kind === "streak" ? 1000 : 950);
     }
 
     function triggerC(kind) {
-      input.blur();
+      if (document.activeElement === input) {
+        input.blur();
+        requestAnimationFrame(() => playC(kind));
+        return;
+      }
+      playC(kind);
+    }
+
+    function playC(kind) {
+      if (document.activeElement === input) return;
       hideToast();
+      fromMastery = mastery;
       const surge = kind === "upgrade" ? 0.22 : 0.12;
       mastery = Math.min(1, mastery + surge);
       renderMeter();
@@ -263,92 +349,191 @@
       return 1;
     }
 
-    function playLayer(mode, kind, duration) {
-      layer.className = "on " + mode;
-      const titles = {
+    function easeOut(t) {
+      const x = Math.min(1, Math.max(0, t));
+      return 1 - Math.pow(1 - x, 3);
+    }
+
+    function titlesFor(kind) {
+      return {
         leap: ["掌握跃迁", "这一词站住了。短光，不占场。"],
         streak: ["连击", "节奏还在。小高潮，不是电影。"],
         clear: ["今日清空", "这一轮收束。可以停，也可以再来一局。"],
         upgrade: ["词力提升", "词力上了一个台阶。没有对手，只有光线。"],
-      };
-      $("cineTitle").textContent = titles[kind][0];
-      $("cineSub").textContent = titles[kind][1];
-      $("heroPct").textContent = Math.round(mastery * 100) + "%";
-      const circ = 2 * Math.PI * 48;
-      $("ringFill").setAttribute("stroke-dashoffset", String(circ * (1 - mastery)));
+      }[kind] || ["今日清空", "这一轮收束。可以停，也可以再来一局。"];
+    }
+
+    function applyHero(kind, fill) {
+      const t = titlesFor(kind);
+      $("cineTitle").textContent = t[0];
+      $("cineSub").textContent = t[1];
+      $("heroPct").textContent = Math.round(fill * 100) + "%";
+      $("ringFill").setAttribute("stroke-dashoffset", String(2 * Math.PI * 48 * (1 - fill)));
+    }
+
+    function playLayer(mode, kind, duration) {
+      if (reduceMotion) {
+        playReduced(mode, kind);
+        return;
+      }
+      layer.className = "on " + mode;
+      applyHero(kind, mastery);
       sizeCanvas();
       const start = performance.now();
       cancelAnimationFrame(cinemaTimer);
       const tick = (now) => {
         const p = Math.min(1, (now - start) / duration);
-        if (mode === "c") drawClimax(p, kind);
-        else drawSmall(p, kind);
+        if (mode === "c") {
+          const elapsed = p * (kind === "upgrade" ? 2.5 : 2.2);
+          const fill = meterFill(elapsed, fromMastery, mastery);
+          applyHero(kind, fill);
+          const titleOn = elapsed >= 0.90;
+          $("cineCopy").style.opacity = titleOn ? String(Math.min(1, (elapsed - 0.90) / 0.28)) : "0";
+          drawClimax(p, kind);
+        } else {
+          $("cineCopy").style.opacity = "1";
+          drawSmall(p, kind);
+        }
         if (p < 1) cinemaTimer = requestAnimationFrame(tick);
         else stopLayer();
       };
       cinemaTimer = requestAnimationFrame(tick);
     }
 
+    function playReduced(mode, kind) {
+      layer.className = "on " + mode + " reduced";
+      applyHero(kind, mastery);
+      $("cineCopy").style.opacity = "1";
+      sizeCanvas();
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      ctx.fillStyle = "rgba(0,0,0,0.58)";
+      ctx.fillRect(0, 0, innerWidth, innerHeight);
+      clearTimeout(playReduced._t);
+      playReduced._t = setTimeout(stopLayer, 360);
+    }
+
+    function meterFill(elapsed, from, to) {
+      if (elapsed < 0.15) return from;
+      if (elapsed >= 0.90) return to;
+      return from + (to - from) * easeOut((elapsed - 0.15) / 0.75);
+    }
+
     function stopLayer() {
       layer.className = "";
       cancelAnimationFrame(cinemaTimer);
+      $("cineCopy").style.opacity = "";
       ctx.clearRect(0, 0, innerWidth, innerHeight);
     }
 
     function drawSmall(progress, kind) {
       const w = innerWidth, h = innerHeight, env = envelope(progress);
       ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = `rgba(12,11,18,${0.26 * env})`;
-      ctx.fillRect(0, 0, w, h);
       const cx = w * 0.5, cy = h * 0.42, radius = Math.min(w, h);
-      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.28);
-      g.addColorStop(0, `rgba(164,139,255,${0.32 * env})`);
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.26);
+      g.addColorStop(0, `rgba(164,139,255,${0.30 * env})`);
       g.addColorStop(1, "rgba(164,139,255,0)");
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(cx, cy, radius * 0.28, 0, Math.PI * 2);
+      ctx.arc(cx, cy, radius * 0.26, 0, Math.PI * 2);
       ctx.fill();
+      const rays = kind === "streak" ? 16 : 12;
+      ctx.strokeStyle = `rgba(108,76,240,${0.42 * env})`;
+      ctx.lineWidth = 1.4;
+      ctx.lineCap = "round";
+      for (let i = 0; i < rays; i++) {
+        const a = i * (Math.PI * 2 / rays);
+        const outer = radius * (0.16 + 0.08 * env);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(a) * outer, cy + Math.sin(a) * outer);
+        ctx.stroke();
+      }
     }
 
     function drawClimax(progress, kind) {
       const w = innerWidth, h = innerHeight;
-      const elapsed = progress * (kind === "upgrade" ? 2.5 : 2.2);
-      const dim = elapsed < 0.2 ? 0.6 * (elapsed / 0.2) : elapsed > 1.9 ? 0.6 * Math.max(0, 1 - (elapsed - 1.9) / 0.4) : 0.6;
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = `rgba(4,3,10,${dim})`;
-      ctx.fillRect(0, 0, w, h);
+      const duration = kind === "upgrade" ? 2.5 : 2.2;
+      const elapsed = progress * duration;
+      const dim = elapsed < 0.2
+        ? 0.62 * (elapsed / 0.2)
+        : elapsed > duration - 0.4
+          ? 0.62 * Math.max(0, 1 - (elapsed - (duration - 0.4)) / 0.4)
+          : 0.62;
       const cx = w * 0.5, cy = h * 0.38;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = `rgba(4,3,12,${dim})`;
+      ctx.fillRect(0, 0, w, h);
+
+      const vig = ctx.createRadialGradient(cx, cy, Math.min(w, h) * 0.12, cx, cy, Math.hypot(w, h) * 0.62);
+      vig.addColorStop(0, "rgba(0,0,0,0)");
+      vig.addColorStop(1, `rgba(0,0,0,${0.48 * (dim / 0.62)})`);
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, w, h);
+
+      const bloom = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(w, h) * 0.46);
+      bloom.addColorStop(0, `rgba(164,139,255,${0.40 * (dim / 0.62)})`);
+      bloom.addColorStop(0.42, `rgba(108,76,240,${0.16 * (dim / 0.62)})`);
+      bloom.addColorStop(1, "rgba(108,76,240,0)");
+      ctx.fillStyle = bloom;
+      ctx.fillRect(0, 0, w, h);
+
+      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, 90);
+      core.addColorStop(0, `rgba(255,220,184,${0.16 * (dim / 0.62)})`);
+      core.addColorStop(1, "rgba(255,220,184,0)");
+      ctx.fillStyle = core;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 90, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (elapsed >= 0.32 && elapsed <= 1.55) {
+        const t = easeOut((elapsed - 0.32) / 1.23);
+        ctx.strokeStyle = `rgba(164,139,255,${0.50 * (1 - t)})`;
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 96 + t * Math.min(w, h) * 0.30, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
       if (elapsed >= 0.38 && elapsed <= 0.42) {
         ctx.fillStyle = "rgba(255,255,255,0.12)";
         ctx.fillRect(0, 0, w, h);
       }
+
       if (elapsed >= 0.4 && elapsed <= 1.6) {
         const local = elapsed - 0.4;
         for (let i = 0; i < 24; i++) {
           const u = (i * 1.618) % 1;
-          const delay = u * 0.18;
-          const life = 0.7 + u * 0.5;
+          const delay = u * 0.16;
+          const life = 0.75 + u * 0.4;
           if (local < delay || local - delay > life) continue;
           const t = (local - delay) / life;
-          const angle = i * (Math.PI * 2 / 24) + u * 0.2;
-          const dist = 108 + t * w * 0.38;
+          const angle = i * (Math.PI * 2 / 24) + u * 0.18;
+          const dist = 112 + t * w * 0.42;
           const x = cx + Math.cos(angle) * dist;
-          const y = cy + Math.sin(angle) * dist * 0.86 + t * t * 28;
-          ctx.globalAlpha = 0.92 * (1 - t);
+          const y = cy + Math.sin(angle) * dist * 0.84 + t * t * 32;
+          ctx.globalAlpha = 0.96 * (1 - t);
           ctx.fillStyle = i % 3 === 2 ? "#ffdcb8" : i % 2 ? "#a48bff" : "#6c4cf0";
-          ctx.fillRect(x - 3, y - 1.2, 6 + (i % 3), 2.4);
+          const rw = 9 + (i % 3) * 3;
+          const rh = 2.6 + (i % 2);
+          ctx.fillRect(x - rw / 2, y - rh / 2, rw, rh);
           ctx.globalAlpha = 1;
         }
       }
     }
 
     $("laneA").onclick = () => setLane("A");
+    $("laneB").onclick = () => setLane("B");
     $("laneC").onclick = () => setLane("C");
+    $("continue").onclick = () => stopLayer();
     renderMeter();
     renderActions();
 
     const params = new URLSearchParams(location.search);
-    if (params.get("lane")) setLane(params.get("lane").toUpperCase());
+    if (params.get("lane")) {
+      setLane(params.get("lane").toUpperCase(), { demo: !params.get("cinema") });
+    } else if (!params.get("cinema") && !params.get("toast") && !params.get("typed")) {
+      setLane("C", { demo: true });
+    }
     if (params.get("typed")) {
       const seed = params.get("typed").toLowerCase().replace(/[^a-z]/g, "");
       if (target.startsWith(seed)) {
@@ -359,28 +544,21 @@
       }
     }
     if (params.get("toast")) {
-      setLane("A");
+      setLane("A", { demo: false });
       showToast(params.get("toast") === "clear" ? "本局记了一笔（无全屏）" : "掌握 +6%（无全屏）");
     }
     if (params.get("cinema")) {
       const kind = params.get("cinema");
       const mode = kind === "leap" || kind === "streak" ? "B" : "C";
-      setLane(mode);
+      setLane(mode, { demo: false });
+      fromMastery = mastery;
       mastery = Math.min(1, mastery + (kind === "upgrade" ? 0.22 : 0.12));
       renderMeter();
-      const frozen = Number(params.get("progress") || 0.5);
+      const frozen = Number(params.get("progress") || 0.55);
       const duration = mode === "B" ? 1000 : kind === "upgrade" ? 2500 : 2200;
       layer.className = "on " + mode.toLowerCase();
-      const titles = {
-        leap: ["掌握跃迁", "这一词站住了。短光，不占场。"],
-        streak: ["连击", "节奏还在。小高潮，不是电影。"],
-        clear: ["今日清空", "这一轮收束。可以停，也可以再来一局。"],
-        upgrade: ["词力提升", "词力上了一个台阶。没有对手，只有光线。"],
-      };
-      $("cineTitle").textContent = (titles[kind] || titles.clear)[0];
-      $("cineSub").textContent = (titles[kind] || titles.clear)[1];
-      $("heroPct").textContent = Math.round(mastery * 100) + "%";
-      $("ringFill").setAttribute("stroke-dashoffset", String(2 * Math.PI * 48 * (1 - mastery)));
+      applyHero(kind, meterFill(frozen * duration, fromMastery, mastery));
+      $("cineCopy").style.opacity = mode === "C" && frozen * duration < 0.9 ? "0" : "1";
       sizeCanvas();
       if (mode === "C") drawClimax(frozen, kind);
       else drawSmall(frozen, kind);

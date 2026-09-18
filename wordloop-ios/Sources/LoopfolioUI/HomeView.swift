@@ -9,7 +9,7 @@ public struct HomeView: View {
         VStack(alignment: .leading, spacing: 18) {
             Text("看释义，敲英文")
                 .font(.system(size: 32, weight: .semibold, design: .serif))
-            Text("一局几十秒。对了立刻下一题。这个仓库里的可运行切片只带词力对比实验。")
+            Text("一局几十秒。对了立刻下一题。这个仓库里的可运行切片只带 A / B / C 词力对比实验。")
                 .foregroundStyle(LoopfolioTheme.muted)
             Spacer()
             if LabAccess.isEnabled {
